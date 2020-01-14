@@ -1,20 +1,25 @@
-#load Packages
+#################################### load Packages ##################################
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import norm
+from sklearn.metrics import mean_squared_error
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.svm import SVR
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 import os
 import csv
 
-#Ignore Warnings
+##Ignore Warnings
 import warnings
 warnings.filterwarnings('ignore')
 
-#change working Directory
+############################ change working Directory ################
 os.chdir('D:\Python Basics\Pycharm\Employee_Absentisum')
 
-#Load Data
+################################ Load Data #################################
 df = pd.read_excel('Absenteeism_at_work.xls')
 df.head()
 
@@ -22,10 +27,9 @@ df.shape
 
 #Rename Column
 df.rename(columns=({'Work load Average/day ': 'Work load Average per day'}), inplace=True)
-
 df.head()
 
-#Missing Value DataFrame
+############################ Missing Value DataFrame #########################
 miss_value = pd.DataFrame({'Actual_value' : df.isnull().sum(),
                            'Miss_Percentage': (df.isnull().sum()/len(df)*100),
                            'Data_Types' : df.dtypes}).sort_values('Actual_value', ascending=True)
@@ -37,7 +41,7 @@ num = ['Distance from Residence to Work', 'Service time', 'Age','Work load Avera
 cat = list(set(df.columns) - set(num))
 cat
 
-#find out no of categories in column
+########################### find out no of categories in column ##########################
 for i in cat:
     print(i, ':', len(df[i].unique()), 'labels')
 
@@ -52,7 +56,7 @@ for i in cat:
 #df['Weight'].loc[70] #= np.nan
 
 
-#Imputing Missing Values
+###################### Imputing Missing Values ###########################
 from sklearn.preprocessing import Imputer
 impute_cat = Imputer(missing_values=np.nan, strategy='most_frequent')
 impute_cat = impute_cat.fit(df[cat])
@@ -61,7 +65,7 @@ impute_num = Imputer(missing_values=np.nan, strategy='median')
 impute_num = impute_num.fit(df[num])
 df[num] = impute_num.transform(df[num])
 
-# Box Plot for Every Numerical Variable
+######################## Box Plot for Every Numerical Variable ########################
 fig = plt.figure(figsize=(13,13))
 for i, var_name in enumerate(num):
     ax= fig.add_subplot(5,3, i+1)
@@ -70,7 +74,7 @@ for i, var_name in enumerate(num):
 plt.tight_layout()
 plt.show()
 
-### Corelation Plot(HeatMap)
+##################################### Corelation Plot(HeatMap) ######################
 mask = np.zeros_like(df[num].corr())
 traingle_indices = np.triu_indices_from(mask)
 mask[traingle_indices] = True
@@ -81,7 +85,7 @@ plt.yticks()
 plt.tight_layout()
 plt.show()
 
-# Histogram plot for all numerical variable
+################### Histogram plot for all numerical variable #############################
 
 fig = plt.figure(figsize=(9,9))
 for i, var_name in enumerate(num):
@@ -98,7 +102,7 @@ plt.show()
 
 df.shape
 
-# Outlier removal
+#################### Outlier removal ##################################
 def outlier_removal(df, cols):
     for i in cols:
         print(i)
@@ -111,11 +115,8 @@ def outlier_removal(df, cols):
         df = df.drop(df[df.loc[:, i] > max_value].index)
         print(df.shape[0])
     return df
-
-df.head()
-print(cat)
-
-# drop target variable from categorical variable
+  
+###### drop target variable from categorical variable
 cat_dummies = cat
 cat_dummies.pop(1)
 cat_dummies
@@ -129,7 +130,7 @@ df = pd.get_dummies(columns=cat_dummies, data=df)
 X = df.drop(['Absenteeism time in hours', 'ID'], axis=1).values
 y = df['Absenteeism time in hours'].values.reshape(-1, 1)
 
-#Normalize data
+######################### Normalize data ############################
 from sklearn.preprocessing import StandardScaler
 sc_X = StandardScaler()
 sc_y = StandardScaler()
@@ -146,9 +147,7 @@ print(len(X_test)/len(df)*100)
 print(len(y_train)/len(df)*100)
 print(len(y_test)/len(df)*100)
 
-################### Linear Regression ################
-from sklearn.metrics import mean_squared_error
-from sklearn.linear_model import LinearRegression
+##################################### Linear Regression #####################################
 LR = LinearRegression()
 LR.fit(X_train, y_train)
 predict_LR_train = LR.predict(X_train)
@@ -157,8 +156,7 @@ predict_LR_test = LR.predict(X_test)
 l_train = np.sqrt(mean_squared_error(y_train, predict_LR_train))
 l_test = np.sqrt(mean_squared_error(y_test, predict_LR_test))
 
-######################## Support Vector Regression #################
-from sklearn.svm import SVR
+###################################### Support Vector Regression ##########################################
 svr = SVR(kernel='linear')
 svr.fit(X_train, y_train)
 predict_svr_train = svr.predict(X_train)
@@ -167,8 +165,7 @@ predict_svr_test = svr.predict(X_test)
 s_train = np.sqrt(mean_squared_error(y_train, predict_svr_train))
 s_test = np.sqrt(mean_squared_error(y_test, predict_svr_test))
 
-###################### Decision Tree Regression ################
-from sklearn.tree import DecisionTreeRegressor
+############################################# Decision Tree Regression ##################################
 DTR = DecisionTreeRegressor(min_impurity_decrease=0.01, random_state=0)
 DTR.fit(X_train, y_train)
 predict_DTR_train = DTR.predict(X_train)
@@ -177,8 +174,7 @@ predict_DTR_test = DTR.predict(X_test)
 d_train = np.sqrt(mean_squared_error(y_train, predict_DTR_train))
 d_test = np.sqrt(mean_squared_error(y_test, predict_DTR_test))
 
-###################### Random Forest Regression ###################
-from sklearn.ensemble import RandomForestRegressor
+############################################ Random Forest Regression ####################################
 RFR = RandomForestRegressor(n_estimators=500, random_state=0)
 RFR.fit(X_train, y_train)
 predict_RFR_train = RFR.predict(X_train)
@@ -187,8 +183,7 @@ predict_RFR_test = RFR.predict(X_test)
 r_train = np.sqrt(mean_squared_error(y_train, predict_RFR_train))
 r_test = np.sqrt(mean_squared_error(y_test, predict_RFR_test))
 
-################ Gradient Boosting Regression ##############
-from sklearn.ensemble import GradientBoostingRegressor
+#################################### Gradient Boosting Regression ##################################
 GBR = GradientBoostingRegressor(max_depth=2, random_state=0)
 GBR.fit(X_train, y_train)
 predict_GBR_train = GBR.predict(X_train)
@@ -197,8 +192,7 @@ predict_GBR_test = GBR.predict(X_test)
 g_train = np.sqrt(mean_squared_error(y_train, predict_GBR_train))
 g_test = np.sqrt(mean_squared_error(y_test, predict_GBR_test))
 
-############## Logistic Regression ############
-from sklearn.linear_model import LogisticRegression
+################################### Logistic Regression ##########################################
 lor = GradientBoostingRegressor()
 lor.fit(X_train, y_train)
 predict_lor_train = lor.predict(X_train)
@@ -209,14 +203,14 @@ lr_train = np.sqrt(mean_squared_error(y_train, predict_lor_train))
 #RMSE_test > RMSE_train Overfitting
 #RMSE_test < RMSE_train Underfitting
 
-### Create DataFrame of Model Result of RMSE
+################### Create DataFrame of Model Result of RMSE
 model = pd.DataFrame({'Train_RMSE':[l_train, s_train, d_train, r_test, g_train, lr_train],
               'Test_RMSE':[l_test, s_test, d_test, r_test, g_test, lr_test]},
              index=['Linear R', 'SVR', 'DT', 'RF', 'GBR', 'Logistic R']).reset_index()
 
 model = model.rename(columns={'index' : 'Model Type'})
 
-model.to_csv('Model_result.pdf', header=True, sep=',')
+model.to_csv('Model_result.csv', header=True, sep=',')
 
 
 
